@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Net;
 
 namespace CardCalculator
 {
@@ -19,7 +22,7 @@ namespace CardCalculator
         private void Calculator_Load(object sender, EventArgs e)//加载设置以及初始化
         {
             texLowestPrice.Text = Properties.Settings.Default.Lowest_Price.ToString();
-            texExchangeRate.Text = Properties.Settings.Default.Exchange_Rate.ToString();
+            texExchangeRate.Text = GetExchangeRateLd();//Properties.Settings.Default.Exchange_Rate.ToString();
             butMore.Tag = false;
             CalculateAmount();
         }
@@ -38,6 +41,32 @@ namespace CardCalculator
             {
                 CalculateAmount();
             }
+        }
+
+        private string GetExchangeRateLd()
+        {
+            string result = "";
+            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("http://www.baidu.com/s?wd=1usd=?rmb");
+            req.Method = "GET";
+            using (WebResponse r = req.GetResponse())
+            {
+                string FindMath = @"(?<=美元=)(\d{1,2}.\d{1,9})";
+                Stream st = r.GetResponseStream();
+                StreamReader rsr = new StreamReader(st,Encoding.UTF8);
+                string line;
+                while ((line = rsr.ReadLine()) != null)
+                {
+                    if(Regex.IsMatch(line,FindMath))
+                    {
+                        result = Regex.Match(line, FindMath).ToString();
+                    }
+                }
+                
+                //1美元=\d{1,2}.\d{1,9}人民币
+                rsr.Close();
+                st.Close();
+            }
+            return result;
         }
 
         private void CalculateAmount()//计算建议价格
