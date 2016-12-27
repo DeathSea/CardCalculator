@@ -48,23 +48,27 @@ namespace CardCalculator
             string result = "";
             HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create("http://www.baidu.com/s?wd=1usd=?rmb");
             req.Method = "GET";
-            using (WebResponse r = req.GetResponse())
+            while (result.Length == 0)
             {
-                string FindMath = @"(?<=美元=)(\d{1,2}.\d{1,9})";
-                Stream st = r.GetResponseStream();
-                StreamReader rsr = new StreamReader(st,Encoding.UTF8);
-                string line;
-                while ((line = rsr.ReadLine()) != null)
+                using (WebResponse r = req.GetResponse())
                 {
-                    if(Regex.IsMatch(line,FindMath))
+                    string FindMath = @"(?<=美元=)(\d{1,2}.\d{1,9})";
+                    Stream st = r.GetResponseStream();
+                    StreamReader rsr = new StreamReader(st, Encoding.UTF8);
+                    string line;
+                    while ((line = rsr.ReadLine()) != null)
                     {
-                        result = Regex.Match(line, FindMath).ToString();
+                        if (Regex.IsMatch(line, FindMath))
+                        {
+                            result = Regex.Match(line, FindMath).ToString();
+                            break;
+                        }
                     }
+
+                    //1美元=\d{1,2}.\d{1,9}人民币
+                    rsr.Close();
+                    st.Close();
                 }
-                
-                //1美元=\d{1,2}.\d{1,9}人民币
-                rsr.Close();
-                st.Close();
             }
             return result;
         }
